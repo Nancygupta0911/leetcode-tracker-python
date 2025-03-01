@@ -1,0 +1,72 @@
+import requests
+import json
+import matplotlib.pyplot as plt
+
+# Function to fetch user data from LeetCode API
+def get_leetcode_data(username):
+    url = "https://leetcode-stats-api.herokuapp.com/" + username
+    response = requests.get(url).json()
+    
+    if "status" in response and response["status"] == "error":
+        return None
+
+    return response
+
+# Function to analyze problem-solving statistics
+def analyze_progress(data):
+    total_solved = data["totalSolved"]
+    easy = data["easySolved"]
+    medium = data["mediumSolved"]
+    hard = data["hardSolved"]
+
+    print(f"Total Problems Solved: {total_solved}")
+    print(f"Easy: {easy}, Medium: {medium}, Hard: {hard}")
+
+    return easy, medium, hard
+
+# Function to suggest weak areas for practice
+def suggest_weak_topics(data):
+    topic_freq = data.get("topTopics", [])
+    
+    if not topic_freq:
+        return "No topic data available"
+
+    sorted_topics = sorted(topic_freq, key=lambda x: x['count'])  # Sort by lowest solved count
+    weak_topics = [topic['topicName'] for topic in sorted_topics[:5]]  # 5 least solved topics
+
+    return weak_topics
+
+# Function to plot problem-solving distribution
+def plot_progress(easy, medium, hard):
+    labels = ["Easy", "Medium", "Hard"]
+    values = [easy, medium, hard]
+    colors = ["green", "orange", "red"]
+
+    plt.figure(figsize=(6, 4))
+    plt.bar(labels, values, color=colors)
+    plt.xlabel("Difficulty Level")
+    plt.ylabel("Number of Problems Solved")
+    plt.title("LeetCode Problem Solving Progress")
+    plt.show()
+
+# Main function to track LeetCode progress
+def leetcode_tracker(username):
+    print(f"Fetching data for {username}...")
+
+    data = get_leetcode_data(username)
+    
+    if not data:
+        print("User not found or API error.")
+        return
+
+    easy, medium, hard = analyze_progress(data)
+    
+    weak_topics = suggest_weak_topics(data)
+    print(f"Weak Topics (Recommended for Practice): {weak_topics}")
+
+    plot_progress(easy, medium, hard)
+
+# Run the program
+if __name__ == "__main__":
+    username = input("Enter LeetCode username: ")
+    leetcode_tracker(username)
